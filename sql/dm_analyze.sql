@@ -1,0 +1,1 @@
+select schema20.dm_analyze();
