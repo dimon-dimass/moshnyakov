@@ -133,10 +133,15 @@ with DAG(
             params={"start_date": {{ data_interval_start.to_date_string() }}}
         )
 
+        dds_analyze_task = SQLExecuteQueryOperator(
+            task_id="dds_analyze_task",
+            sql="sql/dds_analyze.sql"
+        )
+
         (dds_fill_ref_categories_task >> dds_fill_ref_product_types_task >> dds_fill_ref_countries_task >> dds_fill_ref_divisions_task >> dds_fill_ref_regions_task >>
          dds_fill_ref_locations_task >> dds_fill_ref_product_brands_task >> dds_fill_ref_product_manufactures_task >> dds_fill_ref_product_baskets_task >>
          dds_fill_ref_product_commodities_task >> dds_fill_ref_products_task >> dds_fill_ref_customers_task >> dds_fill_dim_location_inventory_task >> 
-         dds_fill_ref_prod_inventory_price_history_task >> dds_fill_dim_receipts_task >> dds_fill_dim_receipt_details_task
+         dds_fill_ref_prod_inventory_price_history_task >> dds_fill_dim_receipts_task >> dds_fill_dim_receipt_details_task >> dds_analyze_task
         )
     
     @task_group()
@@ -153,6 +158,11 @@ with DAG(
             sql="sql/regular_queries/dm_fill_sales_matrix_2022_2023.sql",
         )
 
-        dm_fill_sales_margin_task >> dm_fill_sales_matrix_2022_2023_task
+        dm_analyze_task = SQLExecuteQueryOperator(
+            task_id="dm_analyze_task",
+            sql="sql/dm_analyze.sql"
+        )
+
+        dm_fill_sales_margin_task >> dm_fill_sales_matrix_2022_2023_task >> dm_analyze_task
 
     stg_fill() >> dds_fill() >> dm_fill()
